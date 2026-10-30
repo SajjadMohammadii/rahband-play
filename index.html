@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>راه‌بند</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <main id="app">
+
+    <!-- Home -->
+    <section class="screen" data-screen="home">
+      <header class="hero">
+        <div class="logo" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+        <h1>راه‌بند</h1>
+        <p>راهش رو ببند، زودتر برس!</p>
+      </header>
+      <div class="menu">
+        <button class="btn primary" data-go="resume" hidden id="resumeBtn">▶️ ادامه‌ی بازی نیمه‌کاره</button>
+        <button class="btn primary" data-go="levels">🤖 بازی با هوش مصنوعی</button>
+        <button class="btn" data-go="local">👥 دو نفره روی یک گوشی</button>
+        <button class="btn online-only" data-go="online">🌐 بازی آنلاین با دوست <em class="badge" id="turnBadge" hidden></em></button>
+        <button class="btn online-only" data-go="stats">🏆 امتیازها و رتبه‌ها</button>
+        <button class="btn ghost" data-go="rules">📜 قوانین بازی</button>
+      </div>
+      <p class="note" id="offlineNote" hidden></p>
+    </section>
+
+    <!-- Level select -->
+    <section class="screen" data-screen="levels" hidden>
+      <h2>انتخاب سطح</h2>
+      <div class="levels" id="levelList"></div>
+      <div class="segmented" id="firstPicker">
+        <button data-first="human" class="on">من اول</button>
+        <button data-first="ai">هوش مصنوعی اول</button>
+      </div>
+      <button class="btn primary" id="startAi">شروع بازی</button>
+    </section>
+
+    <!-- Game: three boxes (top player, board, bottom player); undo, hint and pause wait in a side menu. -->
+    <section class="screen game" data-screen="game" hidden>
+      <div class="panel" data-el="topPanel">
+        <button class="piece" data-action="piece" aria-label="دیوار"><i></i></button>
+        <div class="who"><b class="name"></b><span class="meta"><span class="stock"></span><span class="path"></span></span></div>
+        <p class="problem"></p>
+        <div class="decide">
+          <button class="ok" data-action="confirm" aria-label="تأیید">✓</button>
+          <button class="no" data-action="cancel" aria-label="لغو">✕</button>
+        </div>
+      </div>
+      <div class="board-wrap">
+        <canvas data-el="board" class="board"></canvas>
+        <button class="menu-tab" data-action="menu" aria-label="منوی بازی"><i></i></button>
+        <div class="menu-guide" data-el="menuGuide" hidden>
+          <p>برگشت، راهنمایی و توقف این‌جاست: زبانه‌ی کنار صفحه را بزن.</p>
+          <button data-action="guideOk">فهمیدم</button>
+        </div>
+      </div>
+      <div class="panel" data-el="bottomPanel">
+        <button class="piece" data-action="piece" aria-label="دیوار"><i></i></button>
+        <div class="who"><b class="name"></b><span class="meta"><span class="stock"></span><span class="path"></span></span></div>
+        <p class="problem"></p>
+        <div class="decide">
+          <button class="ok" data-action="confirm" aria-label="تأیید">✓</button>
+          <button class="no" data-action="cancel" aria-label="لغو">✕</button>
+        </div>
+      </div>
+      <div class="drawer" data-el="drawer">
+        <div class="drawer-scrim" data-action="closeMenu"></div>
+        <nav class="drawer-card">
+          <button class="menu-item" data-el="undoBtn" data-action="undo" aria-label="برگشت">
+            <i class="badge-icon violet">↩</i><span class="label"><b>برگشت</b><small>حرکت آخر را پس می‌گیرد</small></span>
+          </button>
+          <button class="menu-item" data-el="hintBtn" data-action="hint" aria-label="راهنمایی">
+            <i class="badge-icon amber">💡<em data-el="hintCount"></em></i><span class="label"><b>راهنمایی</b><small>یک حرکت خوب را روی صفحه نشانت می‌دهد</small></span>
+          </button>
+          <button class="menu-item" data-el="resignBtn" data-action="resign" aria-label="تسلیم">
+            <i class="badge-icon gray">🏳️</i><span class="label"><b>تسلیم</b><small>بازی را به حریف واگذار می‌کند</small></span>
+          </button>
+          <button class="menu-item" data-action="pause" aria-label="توقف">
+            <i class="badge-icon coral">❚❚</i><span class="label"><b>توقف</b><small>بازی را نگه می‌دارد؛ شروع دوباره یا خروج</small></span>
+          </button>
+        </nav>
+      </div>
+    </section>
+
+    <!-- Online lobby -->
+    <section class="screen" data-screen="online" hidden>
+      <h2>بازی آنلاین</h2>
+      <button class="btn primary" id="newInvite">➕ ساختن دعوت جدید</button>
+      <div class="card invite" id="inviteCard" hidden>
+        <p>دعوت آماده است! لینک را برای دوستت بفرست؛ اولین کسی که بازش کند حریفت می‌شود.</p>
+        <div class="pulse">منتظر دوستت…</div>
+        <div class="row">
+          <button class="btn primary" id="shareInvite">📨 ارسال برای دوست</button>
+          <button class="btn" id="copyInvite">📋 کپی لینک</button>
+        </div>
+        <button class="btn ghost" id="cancelInvite">لغو دعوت</button>
+      </div>
+      <h3>بازی‌های من</h3>
+      <div class="list" id="gameList"></div>
+    </section>
+
+    <!-- Stats -->
+    <section class="screen" data-screen="stats" hidden>
+      <h2>امتیازها و رتبه‌ها</h2>
+      <div class="tiles">
+        <div class="tile"><small>امتیاز تو</small><b id="myPoints">—</b></div>
+        <div class="tile"><small>رتبه‌ی تو</small><b id="myRank">—</b></div>
+      </div>
+      <h3>در برابر هوش مصنوعی</h3>
+      <div class="list" id="levelStats"></div>
+      <h3>بازی‌های آنلاین</h3>
+      <div class="list" id="onlineStats"></div>
+      <h3>جدول برترین‌ها</h3>
+      <ol class="list board-list" id="leaderboard"></ol>
+      <p class="note" id="pointsRule"></p>
+    </section>
+
+    <!-- Rules -->
+    <section class="screen" data-screen="rules" hidden>
+      <h2>قوانین بازی</h2>
+      <div class="list" id="rulesList"></div>
+      <button class="btn primary" data-go="levels">بزن بریم!</button>
+    </section>
+
+  </main>
+
+  <!-- Overlays -->
+  <div class="overlay" id="resultOverlay" hidden>
+    <div class="sheet">
+      <div class="trophy" id="resultIcon">🏆</div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultMoves"></p>
+      <p class="points" id="resultPoints" hidden></p>
+      <p class="note" id="resultNote" hidden></p>
+      <div class="row">
+        <button class="btn primary" id="playAgain">دوباره</button>
+        <button class="btn" id="resultHome">خانه</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="menuOverlay" hidden>
+    <div class="sheet">
+      <h2>بازی متوقف شد</h2>
+      <button class="btn primary" id="menuResume">ادامه‌ی بازی</button>
+      <button class="btn" id="menuRestart">شروع دوباره</button>
+      <button class="btn ghost" id="menuExit">خروج به خانه</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
